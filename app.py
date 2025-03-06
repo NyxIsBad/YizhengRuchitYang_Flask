@@ -65,6 +65,8 @@ def process(row_id=None):
     M, N = row[12], row[13]  # Columns M, N (zero-indexed: 12, 13)
     K, L = row[10], row[11]  # Columns K, L
     U = row[20]  # Column U
+    V = row[21]  # Column V
+    F = row[5]  # Column F (Interaction Type)
     instructions = row[14:20]  # Columns O-T
     
     instructions = [instr.replace("\n", "<br>") for instr in instructions]
@@ -77,6 +79,8 @@ def process(row_id=None):
     K = K.replace("\n", "<br>")
     L = L.replace("\n", "<br>")
     U = U.replace("\\n", "<br>")
+    V = V.replace("\\n", "<br>")
+    F = F.replace("\\n", "<br>")  # Format newlines for HTML display
     # Prepare data to pass to the template
     data = {
         'index': current,
@@ -85,6 +89,8 @@ def process(row_id=None):
         'M': M,
         'N': N,
         'U': U,
+        'V': V,
+        'F': F,  # Interaction Type
         'instructions': instructions,
         'start_row': current_row,
     }
@@ -96,10 +102,12 @@ def update(row_id):
     global sheet
     M = request.form['M']
     N = request.form['N']
+    V = request.form.get('V', '')  # Get Misc Comments, default to empty string if missing
     
     # Update the cells based on the user input
     sheet.update_cell(row_id+1, 11, M)  # Column K
     sheet.update_cell(row_id+1, 12, N)  # Column L
+    sheet.update_cell(row_id + 1, 22, V)  # Column V (Misc Comments)
     
     # After updating, redirect to the process page with the updated row_id
     return redirect(url_for('process', row_id=row_id))

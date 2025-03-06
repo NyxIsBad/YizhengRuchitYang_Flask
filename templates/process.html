@@ -40,6 +40,11 @@
 
         <!-- Form -->
         <form method="POST" action="{{ url_for('update', row_id=data.index) }}">
+            <!-- Interaction Type Display -->
+	    <div class="mb-4">
+    		<strong class="block font-semibold mb-2"">Interaction Type:</strong>
+    		<div class="text-gray-800">{{ data.F | safe }}</div>
+	    </div>
             <div class="mb-4">
                 <label for="M" class="block font-semibold mb-2">Is the gist of single-turn and multi-turn requests the same? Check if the unit tests should be applicable for multi-turn</label>
                 <select name="M" class="block w-full p-2 border rounded-md" required>
@@ -54,6 +59,11 @@
                     <option value="0" {% if data.N == '0' %} selected {% endif %}>No</option>
                 </select>
             </div>
+            <!-- New Comments Field for Column U -->
+	    <div class="mb-6">
+		<label for="V" class="block font-semibold mb-2">Misc Comments:</label>
+		<textarea name="V" class="block w-full p-2 border rounded-md" rows="3">{{ data.V | safe }}</textarea>
+	    </div>
             <button id="update-button" type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none">Update</button>
         </form>
 
