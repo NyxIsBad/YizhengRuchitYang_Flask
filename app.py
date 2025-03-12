@@ -2,7 +2,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask, render_template, request, redirect, url_for
 import configparser
-import re
+from markupsafe import escape, Markup
 
 app = Flask(__name__)
 
@@ -17,6 +17,9 @@ def authenticate_google_sheets(credentials_file, sheet_id, worksheet_name):
     client = gspread.authorize(creds)
     sheet = client.open_by_key(sheet_id).worksheet(worksheet_name)
     return sheet
+
+def convert_newlines(text):
+    return str(escape(text)).replace("\n", "<br>").replace(r"\n", "<br>")
 
 # Read configuration from config.cfg
 config = configparser.ConfigParser()
@@ -65,31 +68,24 @@ def process(row_id=None):
     M, N = row[12], row[13]  # Columns M, N (zero-indexed: 12, 13)
     K, L = row[10], row[11]  # Columns K, L
     U = row[20]  # Column U
+    print(str(escape(U)).replace(r"\n", "<br>"))
     V = row[21]  # Column V
     F = row[5]  # Column F (Interaction Type)
     instructions = row[14:20]  # Columns O-T
     
-    instructions = [instr.replace("\n", "<br>") for instr in instructions]
+    instructions = [convert_newlines(instr) for instr in instructions]
     # Instructions should be 6 long; lets provide strong to 0, 2, 4 (the instructions)
     instructions[0] = "<strong>" + instructions[0] + "</strong>"
     instructions[2] = "<strong>" + instructions[2] + "</strong>"
     instructions[4] = "<strong>" + instructions[4] + "</strong>"
-    M = M.replace("\n", "<br>")
-    N = N.replace("\n", "<br>")
-    K = K.replace("\n", "<br>")
-    L = L.replace("\n", "<br>")
-    U = U.replace("\\n", "<br>")
-    V = V.replace("\\n", "<br>")
-    F = F.replace("\\n", "<br>")  # Format newlines for HTML display
-    # Prepare data to pass to the template
     data = {
         'index': current,
-        'K': K,
-        'L': L,
-        'M': M,
-        'N': N,
-        'U': U,
-        'V': V,
+        'K': K, # judgement 1
+        'L': L, # judgement 2
+        'M': convert_newlines(M), # instructions
+        'N': convert_newlines(N), # instructions
+        'U': convert_newlines(U), # unit tests
+        'V': convert_newlines(V), # misc comments
         'F': F,  # Interaction Type
         'instructions': instructions,
         'start_row': current_row,
