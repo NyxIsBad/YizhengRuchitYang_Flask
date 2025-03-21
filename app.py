@@ -46,24 +46,24 @@ def set_parameters():
 @app.route('/process/<int:row_id>', methods=['GET'])
 def process(row_id=None):
     global current_row, sheet
-    rows = sheet.get_all_values()
-    num_rows = len(rows)
+    # Get the number of rows in the sheet
 
-    # If row_id is provided, use it, otherwise use the global current_row
+    # If row_id is provided, use it; otherwise, use the global current_row
     if row_id is not None:
-        current = row_id
         current_row = row_id
+        current = row_id
     else:
         current = current_row
-    
-    # Ensure the current page is within valid bounds
-    if current < 2 or current >= num_rows:
-        current = 2  # Skip first 2 rows of headers
 
-    row = rows[current]  # Fetch the specific row
-    
-    if len(row) < 20:  # Ensure row has enough columns
-        return redirect(url_for('process', row_id=current))  # Skip if row doesn't have enough columns
+    # Ensure the current page is within valid bounds
+    if current < 2:
+        current = 2  # Skip the first 2 rows of headers
+
+    # Fetch the specific row directly from the sheet by row_id
+    row = sheet.row_values(current)  # Fetch the specific row instead of all rows
+    print(row)
+    if len(row) < 22:
+        row.extend([''] * (22 - len(row)))  # Extend the row with empty strings up to 22 columns
     
     M, N = row[12], row[13]  # Columns M, N (zero-indexed: 12, 13)
     K, L = row[10], row[11]  # Columns K, L
