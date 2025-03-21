@@ -85,7 +85,7 @@ def process(row_id=None):
         'M': convert_newlines(M), # instructions
         'N': convert_newlines(N), # instructions
         'U': convert_newlines(U), # unit tests
-        'V': convert_newlines(V), # misc comments
+        'V': V, # misc comments
         'F': F,  # Interaction Type
         'instructions': instructions,
         'start_row': current_row,
