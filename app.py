@@ -101,9 +101,9 @@ def update(row_id):
     V = request.form.get('V', '')  # Get Misc Comments, default to empty string if missing
     
     # Update the cells based on the user input
-    sheet.update_cell(row_id+1, 11, M)  # Column K
-    sheet.update_cell(row_id+1, 12, N)  # Column L
-    sheet.update_cell(row_id + 1, 22, V)  # Column V (Misc Comments)
+    sheet.update_cell(row_id, 11, M)  # Column K
+    sheet.update_cell(row_id, 12, N)  # Column L
+    sheet.update_cell(row_id, 22, V)  # Column V (Misc Comments)
     
     # After updating, redirect to the process page with the updated row_id
     return redirect(url_for('process', row_id=row_id))
