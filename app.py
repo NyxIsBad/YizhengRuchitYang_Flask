@@ -68,7 +68,7 @@ def process(row_id=None):
     M, N = row[12], row[13]  # Columns M, N (zero-indexed: 12, 13)
     K, L = row[10], row[11]  # Columns K, L
     U = row[20]  # Column U
-    print(str(escape(U)).replace(r"\n", "<br>"))
+    # print(str(escape(U)).replace(r"\n", "<br>"))
     V = row[21]  # Column V
     F = row[5]  # Column F (Interaction Type)
     instructions = row[14:20]  # Columns O-T

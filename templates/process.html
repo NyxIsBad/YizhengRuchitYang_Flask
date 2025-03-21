@@ -48,15 +48,15 @@
             <div class="mb-4">
                 <label for="M" class="block font-semibold mb-2">Is the gist of single-turn and multi-turn requests the same? Check if the unit tests should be applicable for multi-turn</label>
                 <select name="M" class="block w-full p-2 border rounded-md" required>
-                    <option value="1" {% if data.M == '1' %} selected {% endif %}>Yes</option>
-                    <option value="0" {% if data.M == '0' %} selected {% endif %}>No</option>
+                    <option value="1" {% if data.K == '1' %} selected {% endif %}>Yes</option>
+                    <option value="0" {% if data.K == '0' %} selected {% endif %}>No</option>
                 </select>
             </div>
             <div class="mb-6">
                 <label for="N" class="block font-semibold mb-2">Does multi-turn semantically adhere to interaction type?</label>
                 <select name="N" class="block w-full p-2 border rounded-md" required>
-                    <option value="1" {% if data.N == '1' %} selected {% endif %}>Yes</option>
-                    <option value="0" {% if data.N == '0' %} selected {% endif %}>No</option>
+                    <option value="1" {% if data.L == '1' %} selected {% endif %}>Yes</option>
+                    <option value="0" {% if data.L == '0' %} selected {% endif %}>No</option>
                 </select>
             </div>
             <!-- New Comments Field for Column U -->
@@ -82,6 +82,9 @@
     <!-- Add JavaScript to handle key events -->
     <script>
         document.addEventListener('keydown', function(event) {
+            if (document.activeElement.tagName === 'TEXTAREA') {
+                return; // Do nothing if in the textarea
+            }
             // Left arrow (37) and Right arrow (39) to navigate
             if (event.key === 'ArrowLeft') {
                 document.getElementById('previous-button').click();
