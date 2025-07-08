@@ -9,6 +9,21 @@ app = Flask(__name__)
 # Global variables for starting row, and current page
 start_row = 2
 current_row = start_row
+alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+a_to_index = {char: index for index, char in enumerate(alphabet)}
+
+# global variables for actual columns to select
+Single_Turn = a_to_index['E']
+Interaction_Type = a_to_index['F']
+J_Semantic_Adherence = a_to_index['G'] # judgement
+J_Interaction_Type = a_to_index['H'] #judgement
+Multi_Turn_1 = a_to_index['I']
+Multi_Turn_2 = a_to_index['J']
+Multi_Turn_3 = a_to_index['K']
+Misc_Comments = a_to_index['L']
+Corrected_Turn_1 = a_to_index['M']
+Corrected_Turn_2 = a_to_index['N']
+Corrected_Turn_3 = a_to_index['O']
 
 # Google Sheets authentication
 def authenticate_google_sheets(credentials_file, sheet_id, worksheet_name):
@@ -20,6 +35,30 @@ def authenticate_google_sheets(credentials_file, sheet_id, worksheet_name):
 
 def convert_newlines(text):
     return str(escape(text)).replace("\n", "<br>").replace(r"\n", "<br>")
+
+def highlight_matching_lines(single_text, multi_text):
+    import re
+
+    # Normalize text for comparison
+    def normalize(s):
+        return s.replace('\\\\', '\\').strip()
+
+    # Normalize all lines in the single turn text
+    single_lines_normalized = set(normalize(line) for line in single_text.splitlines() if line.strip())
+
+    highlighted_lines = []
+    for line in multi_text.splitlines():
+        raw_line = line
+        norm_line = normalize(line)
+        if norm_line in single_lines_normalized:
+            highlighted_line = f'<span style="background-color: yellow">{escape(raw_line)}</span>'
+        else:
+            highlighted_line = escape(raw_line)
+        highlighted_lines.append(highlighted_line)
+
+    return Markup('<br>'.join(highlighted_lines))
+
+
 
 # Read configuration from config.cfg
 config = configparser.ConfigParser()
@@ -45,7 +84,7 @@ def set_parameters():
 
 @app.route('/process/<int:row_id>', methods=['GET'])
 def process(row_id=None):
-    global current_row, sheet
+    global current_row, sheet, Single_Turn, Interaction_Type, J_Semantic_Adherence, J_Interaction_Type, Multi_Turn_1, Multi_Turn_2, Multi_Turn_3, Misc_Comments, Corrected_Turn_1, Corrected_Turn_2, Corrected_Turn_3
     # Get the number of rows in the sheet
 
     # If row_id is provided, use it; otherwise, use the global current_row
@@ -65,29 +104,19 @@ def process(row_id=None):
     if len(row) < 22:
         row.extend([''] * (22 - len(row)))  # Extend the row with empty strings up to 22 columns
     
-    M, N = row[12], row[13]  # Columns M, N (zero-indexed: 12, 13)
-    K, L = row[10], row[11]  # Columns K, L
-    U = row[20]  # Column U
-    # print(str(escape(U)).replace(r"\n", "<br>"))
-    V = row[21]  # Column V
-    F = row[5]  # Column F (Interaction Type)
-    instructions = row[14:20]  # Columns O-T
-    
-    instructions = [convert_newlines(instr) for instr in instructions]
-    # Instructions should be 6 long; lets provide strong to 0, 2, 4 (the instructions)
-    instructions[0] = "<strong>" + instructions[0] + "</strong>"
-    instructions[2] = "<strong>" + instructions[2] + "</strong>"
-    instructions[4] = "<strong>" + instructions[4] + "</strong>"
     data = {
         'index': current,
-        'K': K, # judgement 1
-        'L': L, # judgement 2
-        'M': convert_newlines(M), # instructions
-        'N': convert_newlines(N), # instructions
-        'U': convert_newlines(U), # unit tests
-        'V': V, # misc comments
-        'F': F,  # Interaction Type
-        'instructions': instructions,
+        'single_turn': convert_newlines(row[Single_Turn]),  # Column E
+        'j_semantic_adherence': row[J_Semantic_Adherence],  # Column G
+        'j_interaction_type': row[J_Interaction_Type],  # Column H
+        'interaction_type': row[Interaction_Type],  # Column F
+        'multi_turn_1': highlight_matching_lines(row[Single_Turn], row[Multi_Turn_1]),  # Column I
+        'multi_turn_2': highlight_matching_lines(row[Single_Turn], row[Multi_Turn_2]),  # Column J
+        'multi_turn_3': highlight_matching_lines(row[Single_Turn], row[Multi_Turn_3]),  # Column K
+        'misc_comments': convert_newlines(row[Misc_Comments]),  # Column L
+        'corrected_turn_1': row[Corrected_Turn_1],  # Column M
+        'corrected_turn_2': row[Corrected_Turn_2],  # Column N
+        'corrected_turn_3': row[Corrected_Turn_3],
         'start_row': current_row,
     }
 
@@ -95,16 +124,22 @@ def process(row_id=None):
 
 @app.route('/update/<int:row_id>', methods=['POST'])
 def update(row_id):
-    global sheet
-    M = request.form['M']
-    N = request.form['N']
-    V = request.form.get('V', '')  # Get Misc Comments, default to empty string if missing
-    
+    global sheet, Single_Turn, Interaction_Type, J_Semantic_Adherence, J_Interaction_Type, Multi_Turn_1, Multi_Turn_2, Multi_Turn_3, Misc_Comments, Corrected_Turn_1, Corrected_Turn_2, Corrected_Turn_3
+
+    new_semantic_judgement = request.form.get('j_semantic', '')  # Get Semantic Adherence judgement, default to empty string if missing
+    new_interaction_judgement = request.form.get('j_interaction', '')  # Get Interaction judgement, default to empty string if missing
+    new_misc_comments = request.form.get('misc', '')  # Get Misc Comments, default to empty string if missing
+    new_corrected_turn_1 = request.form.get('corrected_turn_1', '')  # Get Corrected Turn 1, default to empty string if missing
+    new_corrected_turn_2 = request.form.get('corrected_turn_2', '')  # Get Corrected Turn 2, default to empty string if missing
+    new_corrected_turn_3 = request.form.get('corrected_turn_3', '')  # Get Corrected Turn 3, default to empty string if missing
     # Update the cells based on the user input
-    sheet.update_cell(row_id, 11, M)  # Column K
-    sheet.update_cell(row_id, 12, N)  # Column L
-    sheet.update_cell(row_id, 22, V)  # Column V (Misc Comments)
-    
+    sheet.update_cell(row_id, J_Semantic_Adherence + 1, new_semantic_judgement)
+    sheet.update_cell(row_id, J_Interaction_Type + 1, new_interaction_judgement)
+    sheet.update_cell(row_id, Misc_Comments + 1, new_misc_comments)
+    sheet.update_cell(row_id, Corrected_Turn_1 + 1, new_corrected_turn_1)
+    sheet.update_cell(row_id, Corrected_Turn_2 + 1, new_corrected_turn_2)
+    sheet.update_cell(row_id, Corrected_Turn_3 + 1, new_corrected_turn_3)
+
     # After updating, redirect to the process page with the updated row_id
     return redirect(url_for('process', row_id=row_id))
 
