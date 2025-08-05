@@ -38,25 +38,44 @@ def convert_newlines(text):
 
 def highlight_matching_lines(single_text, multi_text):
     import re
+    from markupsafe import Markup, escape
 
     # Normalize text for comparison
     def normalize(s):
         return s.replace('\\\\', '\\').strip()
 
     # Normalize all lines in the single turn text
-    single_lines_normalized = set(normalize(line) for line in single_text.splitlines() if line.strip())
+    single_lines_normalized = set(
+        normalize(line) for line in single_text.splitlines() if line.strip()
+    )
+
+    # Regex to match standalone 3-digit numbers
+    three_digit_re = re.compile(r'\b\d{3}\b')
 
     highlighted_lines = []
     for line in multi_text.splitlines():
         raw_line = line
         norm_line = normalize(line)
+
+        # Escape
+        escaped_line = escape(raw_line)
+
+        # Possible error codes? 
+        escaped_line = three_digit_re.sub(
+            lambda m: f'<span style="color: red">{m.group()}</span>',
+            escaped_line
+        )
+
+        # Highlight matching lines in yellow background
         if norm_line in single_lines_normalized:
-            highlighted_line = f'<span style="background-color: yellow">{escape(raw_line)}</span>'
+            highlighted_line = f'<span style="background-color: yellow">{escaped_line}</span>'
         else:
-            highlighted_line = escape(raw_line)
+            highlighted_line = escaped_line
+
         highlighted_lines.append(highlighted_line)
 
     return Markup('<br>'.join(highlighted_lines))
+
 
 
 
